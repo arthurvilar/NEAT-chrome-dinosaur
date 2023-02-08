@@ -185,6 +185,19 @@ def score():
     SCREEN.blit(text, textRect)
 
 
+def statistics():
+    global dinosaurs, game_speed, ge
+    font = pygame.font.Font('freesansbold.ttf', 20)
+
+    text_1 = font.render(f'Dinosaurs Alive:  {str(len(dinosaurs))}', True, (0, 0, 0))
+    text_2 = font.render(f'Generation:  {p.generation+1}', True, (0, 0, 0))
+    text_3 = font.render(f'Game Speed:  {str(game_speed)}', True, (0, 0, 0))
+
+    SCREEN.blit(text_1, (50, 450))
+    SCREEN.blit(text_2, (50, 480))
+    SCREEN.blit(text_3, (50, 510))
+
+
 def background():
     global x_pos_bg, y_pos_bg
     
@@ -265,20 +278,25 @@ def eval_genomes(genomes, config):
                     nets.pop(i)
                     ge.pop(i)
 
-        for i, dinosaur in enumerate(dinosaurs):
-            output = nets[i].activate((dinosaur.dino_rect.y,
-                                       distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y),
-                                        obstacles[0].rect.midtop)))
-            if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
-                #dinosaur.update(userInput) # mudar isso aqui pra pular
-                dinosaur.dino_duck = False
-                dinosaur.dino_run = False
-                dinosaur.dino_jump = True
+        # para não crashar, se obstacles estiver vazio da erro de index
+        if len(obstacles) == 1:
+            obstacle = obstacles[0]
+
+            for i, dinosaur in enumerate(dinosaurs):
+                output = nets[i].activate((dinosaur.dino_rect.y,
+                                        distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y),
+                                            obstacle.rect.midtop)))
+                if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
+                    #dinosaur.update(userInput) # mudar isso aqui pra pular
+                    dinosaur.dino_duck = False
+                    dinosaur.dino_run = False
+                    dinosaur.dino_jump = True
 
         background()
         cloud.draw(SCREEN)
         cloud.update()
         score()
+        statistics()
         clock.tick(30)
         pygame.display.update()
 
