@@ -56,7 +56,7 @@ class Dinosaur:
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
 
-    def update(self):
+    def update(self, userInput):
         if self.dino_duck:
             self.duck()
         if self.dino_run:
@@ -67,18 +67,18 @@ class Dinosaur:
         if self.step_index >= 10:
             self.step_index = 0
 
-        # if userInput[pygame.K_UP] and not self.dino_jump:
-        #     self.dino_duck = False
-        #     self.dino_run = False
-        #     self.dino_jump = True
-        # elif userInput[pygame.K_DOWN] and not self.dino_jump:
-        #     self.dino_duck = True
-        #     self.dino_run = False
-        #     self.dino_jump = False
-        # elif not (self.dino_jump or userInput[pygame.K_DOWN]):
-        #     self.dino_duck = False
-        #     self.dino_run = True
-        #     self.dino_jump = False
+        if userInput == "jump" and not self.dino_jump:
+            self.dino_duck = False
+            self.dino_run = False
+            self.dino_jump = True
+        elif userInput == "duck" and not self.dino_jump:
+            self.dino_duck = True
+            self.dino_run = False
+            self.dino_jump = False
+        elif not (self.dino_jump or userInput == "duck"):
+            self.dino_duck = False
+            self.dino_run = True
+            self.dino_jump = False
 
     def duck(self):
         self.image = self.duck_img[self.step_index // 5]
@@ -254,12 +254,30 @@ def eval_genomes(genomes, config):
         SCREEN.fill((255, 255, 255))
 
         for dinosaur in dinosaurs:
-            dinosaur.update()
+            dinosaur.update("run")
             dinosaur.draw(SCREEN)
 
         if len(dinosaurs) == 0:
             break
 
+        # calcula output
+        if len(obstacles) == 1:
+            obstacle = obstacles[0]
+
+            for i, dinosaur in enumerate(dinosaurs):
+                ge[i].fitness += 0.1
+
+                output = nets[i].activate((dinosaur.dino_rect.y,
+                                        distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y),
+                                            obstacle.rect.midtop)))
+
+                if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
+                    dinosaur.update("jump")
+                    # dinosaur.dino_duck = False
+                    # dinosaur.dino_run = False
+                    # dinosaur.dino_jump = True
+
+        # adiciona obstaculo
         if len(obstacles) == 0:
             if random.randint(0, 1) == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS))
@@ -268,6 +286,7 @@ def eval_genomes(genomes, config):
             # elif random.randint(0, 2) == 2:
             #     obstacles.append(Bird(BIRD))
 
+        # colisao
         for obstacle in obstacles:
             obstacle.draw(SCREEN)
             obstacle.update()
@@ -277,20 +296,6 @@ def eval_genomes(genomes, config):
                     dinosaurs.pop(i)
                     nets.pop(i)
                     ge.pop(i)
-
-        # para não crashar, se obstacles estiver vazio da erro de index
-        if len(obstacles) == 1:
-            obstacle = obstacles[0]
-
-            for i, dinosaur in enumerate(dinosaurs):
-                output = nets[i].activate((dinosaur.dino_rect.y,
-                                        distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y),
-                                            obstacle.rect.midtop)))
-                if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
-                    #dinosaur.update(userInput) # mudar isso aqui pra pular
-                    dinosaur.dino_duck = False
-                    dinosaur.dino_run = False
-                    dinosaur.dino_jump = True
 
         background()
         cloud.draw(SCREEN)

@@ -277,12 +277,9 @@ def eval_genomes(genomes, config):
                 dinosaur.draw(SCREEN)
 
         background()
-
         cloud.draw(SCREEN)
         cloud.update()
-
         score()
-
         clock.tick(30)
         pygame.display.update()
 
