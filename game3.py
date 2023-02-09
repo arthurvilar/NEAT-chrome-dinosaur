@@ -176,7 +176,7 @@ def score():
     font = pygame.font.Font('freesansbold.ttf', 20)
     
     points += 1
-    if points % 100 == 0:
+    if points % 100 == 0 and game_speed < 40:
         game_speed += 1
     
     text = font.render("Points: " + str(points), True, (0, 0, 0))
@@ -246,6 +246,9 @@ def eval_genomes(genomes, config):
 
     # Main loop
     while run:
+
+        # colocar uma variavel com jump como padrao, mudar essa variavel caso nescessario e dar update uma vez so no final do loop
+         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -268,23 +271,29 @@ def eval_genomes(genomes, config):
                 ge[i].fitness += 0.1
 
                 output = nets[i].activate((dinosaur.dino_rect.y,
-                                        distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y),
-                                            obstacle.rect.midtop)))
+                                           distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y), obstacle.rect.midtop)))
+
+                """ output = neural_net.activate((
+                    dinosaur.y, # Dinosaur's y-coordinate
+                    self.obstacles[0].y, # Obstacle's y-coordinate
+                    self.obstacles[0].width, # Width of the obstacle
+                    self.obstacles[0].height, # Height of the obstacle
+                    abs(dinosaur.x + dinosaur.width - self.obstacles[0].x), # Distance
+                    self.obstacle_velx # Game speed
+                )) if self.obstacles else None """
 
                 if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
                     dinosaur.update("jump")
-                    # dinosaur.dino_duck = False
-                    # dinosaur.dino_run = False
-                    # dinosaur.dino_jump = True
 
         # adiciona obstaculo
         if len(obstacles) == 0:
-            if random.randint(0, 1) == 0:
+            num = random.randint(0, 2)
+            if num == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS))
-            else:
+            elif num == 1:
                 obstacles.append(LargeCactus(LARGE_CACTUS))
-            # elif random.randint(0, 2) == 2:
-            #     obstacles.append(Bird(BIRD))
+            else:
+                obstacles.append(Bird(BIRD))
 
         # colisao
         for obstacle in obstacles:
@@ -329,5 +338,5 @@ def run(config_path):
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, "config.txt")
+    config_path = os.path.join(local_dir, "configBird.txt")
     run(config_path)

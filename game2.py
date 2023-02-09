@@ -56,7 +56,7 @@ class Dinosaur:
         self.dino_rect.x = self.X_POS
         self.dino_rect.y = self.Y_POS
 
-    def update(self):
+    def update(self, userInput):
         if self.dino_duck:
             self.duck()
         if self.dino_run:
@@ -67,18 +67,18 @@ class Dinosaur:
         if self.step_index >= 10:
             self.step_index = 0
 
-        # if userInput[pygame.K_UP] and not self.dino_jump:
-        #     self.dino_duck = False
-        #     self.dino_run = False
-        #     self.dino_jump = True
-        # elif userInput[pygame.K_DOWN] and not self.dino_jump:
-        #     self.dino_duck = True
-        #     self.dino_run = False
-        #     self.dino_jump = False
-        # elif not (self.dino_jump or userInput[pygame.K_DOWN]):
-        #     self.dino_duck = False
-        #     self.dino_run = True
-        #     self.dino_jump = False
+        if userInput == "jump" and not self.dino_jump:
+            self.dino_duck = False
+            self.dino_run = False
+            self.dino_jump = True
+        elif userInput == "duck" and not self.dino_jump:
+            self.dino_duck = True
+            self.dino_run = False
+            self.dino_jump = False
+        elif not (self.dino_jump or userInput == "duck"):
+            self.dino_duck = False
+            self.dino_run = True
+            self.dino_jump = False
 
     def duck(self):
         self.image = self.duck_img[self.step_index // 5]
@@ -176,13 +176,26 @@ def score():
     font = pygame.font.Font('freesansbold.ttf', 20)
     
     points += 1
-    if points % 100 == 0:
+    if points % 100 == 0 and game_speed < 40:
         game_speed += 1
     
     text = font.render("Points: " + str(points), True, (0, 0, 0))
     textRect = text.get_rect()
     textRect.center = (1000, 40)
     SCREEN.blit(text, textRect)
+
+
+def statistics():
+    global dinosaurs, game_speed, ge
+    font = pygame.font.Font('freesansbold.ttf', 20)
+
+    text_1 = font.render(f'Dinosaurs Alive:  {str(len(dinosaurs))}', True, (0, 0, 0))
+    text_2 = font.render(f'Generation:  {p.generation+1}', True, (0, 0, 0))
+    text_3 = font.render(f'Game Speed:  {str(game_speed)}', True, (0, 0, 0))
+
+    SCREEN.blit(text_1, (50, 450))
+    SCREEN.blit(text_2, (50, 480))
+    SCREEN.blit(text_3, (50, 510))
 
 
 def background():
@@ -241,20 +254,36 @@ def eval_genomes(genomes, config):
         SCREEN.fill((255, 255, 255))
 
         for dinosaur in dinosaurs:
-            dinosaur.update()
+            dinosaur.update("run")
             dinosaur.draw(SCREEN)
 
         if len(dinosaurs) == 0:
             break
 
+        # calcula output
+        if len(obstacles) == 1:
+            obstacle = obstacles[0]
+
+            for i, dinosaur in enumerate(dinosaurs):
+                ge[i].fitness += 0.1
+
+                output = nets[i].activate((dinosaur.dino_rect.y,
+                                        distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y),
+                                            obstacle.rect.midtop)))
+
+                if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
+                    dinosaur.update("jump")
+
+        # adiciona obstaculo
         if len(obstacles) == 0:
             if random.randint(0, 1) == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS))
-            elif random.randint(0, 1) == 1:
+            else:
                 obstacles.append(LargeCactus(LARGE_CACTUS))
             # elif random.randint(0, 2) == 2:
             #     obstacles.append(Bird(BIRD))
 
+        # colisao
         for obstacle in obstacles:
             obstacle.draw(SCREEN)
             obstacle.update()
@@ -265,30 +294,26 @@ def eval_genomes(genomes, config):
                     nets.pop(i)
                     ge.pop(i)
 
-        for i, dinosaur in enumerate(dinosaurs):
-            output = nets[i].activate((dinosaur.dino_rect.y,
-                                        distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y),
-                                        obstacle.rect.midtop)))
-            if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
-                #dinosaur.update(userInput) # mudar isso aqui pra pular
-                dinosaur.dino_duck = False
-                dinosaur.dino_run = False
-                dinosaur.dino_jump = True
-                dinosaur.draw(SCREEN)
-
         background()
         cloud.draw(SCREEN)
         cloud.update()
         score()
+        statistics()
         clock.tick(30)
         pygame.display.update()
 
 
 def run(config_path):
 
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_path)
+    global p
+
+    config = neat.config.Config(
+        neat.DefaultGenome,
+        neat.DefaultReproduction,
+        neat.DefaultSpeciesSet,
+        neat.DefaultStagnation,
+        config_path
+    )
 
     p = neat.Population(config)
 
