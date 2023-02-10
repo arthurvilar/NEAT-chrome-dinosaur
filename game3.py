@@ -270,19 +270,23 @@ def eval_genomes(genomes, config):
             for i, dinosaur in enumerate(dinosaurs):
                 ge[i].fitness += 0.1
 
-                output = nets[i].activate((dinosaur.dino_rect.y,
-                                           distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y), obstacle.rect.midtop)))
+                # output = nets[i].activate((dinosaur.dino_rect.y,
+                #                            distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y), obstacle.rect.midtop)))
 
-                """ output = neural_net.activate((
-                    dinosaur.y, # Dinosaur's y-coordinate
-                    self.obstacles[0].y, # Obstacle's y-coordinate
-                    self.obstacles[0].width, # Width of the obstacle
-                    self.obstacles[0].height, # Height of the obstacle
-                    abs(dinosaur.x + dinosaur.width - self.obstacles[0].x), # Distance
-                    self.obstacle_velx # Game speed
-                )) if self.obstacles else None """
+                output = nets[i].activate((
+                    dinosaur.dino_rect.y, # Dinosaur's y-coordinate
+                    obstacle.rect.y, # Obstacle's y-coordinate
+                    obstacle.rect.width, # Width of the obstacle
+                    obstacle.rect.height, # Height of the obstacle rect.midtop
+                    abs(dinosaur.dino_rect.x + dinosaur.dino_rect.width - obstacle.rect.x), # Distance
+                    game_speed # Game speed
+                ))
 
-                if output[0] > 0.5 and dinosaur.dino_rect.y == dinosaur.Y_POS:
+                if output[0] > 0.5 and not dinosaur.dino_jump and not dinosaur.dino_duck:
+                    dinosaur.update("duck")
+                elif output[0] <= 0.5 and not dinosaur.dino_jump and dinosaur.dino_duck:
+                    dinosaur.update("run")
+                elif output[1] > 0.5 and not dinosaur.dino_jump and not dinosaur.dino_duck:
                     dinosaur.update("jump")
 
         # adiciona obstaculo
