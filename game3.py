@@ -274,12 +274,12 @@ def eval_genomes(genomes, config):
                 #                            distance((dinosaur.dino_rect.x, dinosaur.dino_rect.y), obstacle.rect.midtop)))
 
                 output = nets[i].activate((
-                    dinosaur.dino_rect.y, # Dinosaur's y-coordinate
-                    obstacle.rect.y, # Obstacle's y-coordinate
-                    obstacle.rect.width, # Width of the obstacle
-                    obstacle.rect.height, # Height of the obstacle rect.midtop
-                    abs(dinosaur.dino_rect.x + dinosaur.dino_rect.width - obstacle.rect.x), # Distance
-                    game_speed # Game speed
+                    dinosaur.dino_rect.y, # coord y do dino
+                    obstacle.rect.y, # coord y do obstaculo
+                    obstacle.rect.width, # largura do obstaculo
+                    obstacle.rect.height, # altura do obstaculo
+                    abs(dinosaur.dino_rect.x + dinosaur.dino_rect.width - obstacle.rect.x), # distancia
+                    game_speed # velocidade do jogo
                 ))
 
                 if output[0] > 0.5 and not dinosaur.dino_jump and not dinosaur.dino_duck:
