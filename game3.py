@@ -158,10 +158,11 @@ class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
         super().__init__(image, self.type)
-        if random.randint(0, 1) == 0:
-            self.rect.y = 250
-        else:
+        rand = random.randint(0, 3)
+        if(rand == 0):
             self.rect.y = 300
+        else:
+            self.rect.y = 200
         self.index = 0
 
     def draw(self, SCREEN):
@@ -246,7 +247,6 @@ def eval_genomes(genomes, config):
 
     # Main loop
     while run:
-
         # colocar uma variavel com jump como padrao, mudar essa variavel caso nescessario e dar update uma vez so no final do loop
          
         for event in pygame.event.get():
@@ -291,10 +291,10 @@ def eval_genomes(genomes, config):
 
         # adiciona obstaculo
         if len(obstacles) == 0:
-            num = random.randint(0, 2)
-            if num == 0:
+            num = random.randint(0, 10)
+            if num < 3:
                 obstacles.append(SmallCactus(SMALL_CACTUS))
-            elif num == 1:
+            elif num < 6:
                 obstacles.append(LargeCactus(LARGE_CACTUS))
             else:
                 obstacles.append(Bird(BIRD))
